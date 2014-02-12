@@ -1,0 +1,459 @@
+<!DOCTYPE  html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>doc</title>
+    <style>
+      /*github.com style (c) Vasily Polovnyov <vast@whiteants.net>*/
+      pre code {
+        display: block; padding: 0.5em;
+        color: #333;
+        background: #f8f8ff
+      }
+      pre .comment,
+      pre .template_comment,
+      pre .diff .header,
+      pre .javadoc {
+        color: #998;
+        font-style: italic
+      }
+      pre .keyword,
+      pre .css .rule .keyword,
+      pre .winutils,
+      pre .javascript .title,
+      pre .nginx .title,
+      pre .subst,
+      pre .request,
+      pre .status {
+        color: #333;
+        font-weight: bold
+      }
+      pre .number,
+      pre .hexcolor,
+      pre .ruby .constant {
+        color: #099;
+      }
+      pre .string,
+      pre .tag .value,
+      pre .phpdoc,
+      pre .tex .formula {
+        color: #d14
+      }
+      pre .title,
+      pre .id {
+        color: #900;
+        font-weight: bold
+      }
+      pre .javascript .title,
+      pre .lisp .title,
+      pre .clojure .title,
+      pre .subst {
+        font-weight: normal
+      }
+      pre .class .title,
+      pre .haskell .type,
+      pre .vhdl .literal,
+      pre .tex .command {
+        color: #458;
+        font-weight: bold
+      }
+      pre .tag,
+      pre .tag .title,
+      pre .rules .property,
+      pre .django .tag .keyword {
+        color: #000080;
+        font-weight: normal
+      }
+      pre .attribute,
+      pre .variable,
+      pre .lisp .body {
+        color: #008080
+      }
+      pre .regexp {
+        color: #009926
+      }
+      pre .class {
+        color: #458;
+        font-weight: bold
+      }
+      pre .symbol,
+      pre .ruby .symbol .string,
+      pre .lisp .keyword,
+      pre .tex .special,
+      pre .prompt {
+        color: #990073
+      }
+      pre .built_in,
+      pre .lisp .title,
+      pre .clojure .built_in {
+        color: #0086b3
+      }
+      pre .preprocessor,
+      pre .pi,
+      pre .doctype,
+      pre .shebang,
+      pre .cdata {
+        color: #999;
+        font-weight: bold
+      }
+      pre .deletion {
+        background: #fdd
+      }
+      pre .addition {
+        background: #dfd
+      }
+      pre .diff .change {
+        background: #0086b3
+      }
+      pre .chunk {
+        color: #aaa
+      }
+    </style>
+  </head>
+  <body>  
+    <h2 id="express">Express</h2>
+<p>Express is the most prolific Node based http framework. Express builds on connect, a middleware library for the Node native <code>http</code> module. Express adds handle middleware in by default and provides the user with an <code>http</code> router. Express has dozens of community built middleware that accomplish many common web development tasks. Express is made to be lightweight, having only the functionality required to route requests into your Node app. Express does not have a notion of &#39;models&#39; or really even &#39;controllers&#39;. Express is just a routing layer for your application. Do whatever you want beyond that! </p>
+<h2 id="what-we-ll-cover">What we&#39;ll cover</h2>
+<ul>
+<li>How to install express</li>
+<li>Cover the express API</li>
+<li>Learn about middleware</li>
+<li>Use express convenience methods</li>
+<li>Route traffic</li>
+<li>Write middleware</li>
+</ul>
+<h2 id="installing">Installing</h2>
+<p>Express is in the npm registry as <code>express</code>. You install it just like any other npm module. You can install express globally with npm to use it as a command line tool. Express has handy functionality to initialize a project for you. The express command line tool will scaffold your application and get you running immediately. You can actually run the <code>app.js</code> file that the initialization tool gives you. You can of course setup express on your own. By default, the command line tool gives you the following to begin with.</p>
+<pre><code>$ express init</code></pre>
+<p>Yeilds:</p>
+<pre><code>-rw-r--r--  1 tjkrusinski  881 Jan 27 14:06 app.js
+-rw-r--r--  1 tjkrusinski  185 Jan 27 14:06 package.json
+drwxr-xr-x  5 tjkrusinski  170 Jan 27 14:06 public
+drwxr-xr-x  4 tjkrusinski  136 Jan 27 14:06 routes
+drwxr-xr-x  4 tjkrusinski  136 Jan 27 14:06 views</code></pre>
+<p>If we look at <code>app.js</code> we&#39;ll see:</p>
+<pre><code>/**
+ * Module dependencies.
+ */
+
+var express = require(&#39;express&#39;);
+var routes = require(&#39;./routes&#39;);
+var user = require(&#39;./routes/user&#39;);
+var http = require(&#39;http&#39;);
+var path = require(&#39;path&#39;);
+
+var app = express();
+
+// all environments
+app.set(&#39;port&#39;, process.env.PORT || 3000);
+app.set(&#39;views&#39;, path.join(__dirname, &#39;views&#39;));
+app.set(&#39;view engine&#39;, &#39;jade&#39;);
+app.use(express.favicon());
+app.use(express.logger(&#39;dev&#39;));
+app.use(express.json());
+app.use(express.urlencoded());
+app.use(express.methodOverride());
+app.use(app.router);
+app.use(express.static(path.join(__dirname, &#39;public&#39;)));
+
+// development only
+if (&#39;development&#39; == app.get(&#39;env&#39;)) {
+  app.use(express.errorHandler());
+}
+
+app.get(&#39;/&#39;, routes.index);
+app.get(&#39;/users&#39;, user.list);
+
+http.createServer(app).listen(app.get(&#39;port&#39;), function(){
+  console.log(&#39;Express server listening on port &#39; + app.get(&#39;port&#39;));
+});</code></pre>
+<p>We can tell by looking at the directory tree and how express wrote <code>app.js</code> for us that it is a bit opinionated. Most folks do the following at least, create a <code>public</code> directory, and a views <code>directory</code>. We&#39;ll take a look at what else is going on in a bit.</p>
+<h2 id="express-api">Express API</h2>
+<h3 id="-get-and-set-"><code>get()</code> and <code>set()</code></h3>
+<p>Express has a simple way to store state of key/value pairs with <code>express.get()</code> and <code>express.set()</code>. These methods are useful for things like the port that express listens on, the environment variable for and anything else you would like to store in a key/value format. The nice thing about <code>set()</code> is that whatever you set with it is reflected in your view engine of choice. If the view engine supports express, the variables with be in the global name space. This is great if you deploy static assets, images, javascript files, css files, to a CDN for production but server them locally during development. Setting the location of these files in your express config is easy with <code>set()</code>.</p>
+<h2 id="middleware">Middleware</h2>
+<p>Middleware are a <a href="http://www.senchalabs.org/connect/">connect</a> construct that allow us to encapsulate server side functionality in a concise manner. If you come from Rails or other MVC frameworks, you are likely familiar with controllers and models. With express, middleware functions are typically referred to as controllers. These functions have a 3 argument signature, the first is the http request object, the second, the http response object and the last, which is optional, a function. The last function argument is typically named <code>next</code> in express applications. You can call <code>next</code> when you are done inside of the current middleware to pass execution context to the next middleware. Essentially <code>next</code> is a callback. Let&#39;s take a look at some acceptable middleware.</p>
+<pre><code>/**
+ *    Get a user from our user model
+ *    @method getUser
+ *
+ *    @param {Object} req
+ *    @param {Object} res
+ *    @param {Function} next
+ */
+function getUser (req, res, next) {
+    var user = req.params.userId;
+
+    users.get(user, function(err, data){
+        if (err) return next(err);
+        res.locals.user = data;
+        next();
+    });
+};
+
+/**
+ *    Render the user view
+ *    @method render
+ *
+ *    @param {Object} req
+ *    @param {Object} res
+ */
+function render (req, res) {
+    res.render(&#39;user&#39;);
+};</code></pre>
+<p>Using middleware for separation of concern is great. You can create middleware that do one thing and chain many of them for one route. There is not limit to how many express will let you pass in but there is a practical balance of functionality and expressiveness. What is important when creating your middleware is that they should be as independent as possible. In other words, a middleware should not be completely dependent on another middleware in order for it to run properly. This quickly leads into debate about application state, however, keeping as much dependent state from middleware to middleware is good practice.</p>
+<p>It&#39;s important to understand middleware since after you set up your express app, building middleware will consume most of your development time.</p>
+<h2 id="routing">Routing</h2>
+<p>Routing is an essential part of any http framework and is rather pleasent in express. Defining routes is done by calling one a few methods on the app instance. As you would likely exprect, these methods are <code>get()</code>, <code>post()</code>, <code>patch()</code>, <code>put()</code>, <code>delete()</code> and if you want all http verbs, <code>all()</code>. To handle <code>HEAD</code> requests, express will run the route as if it were at <code>GET</code> request, but will not send a body in the response.</p>
+<pre><code>app.get(&#39;/?&#39;, controller1, controller2, function(req, res){
+    res.render(&#39;index&#39;);
+});
+
+app.post(&#39;/contactus?&#39;, contactController, function(req, res){
+    res.redirect(&#39;/aboutus&#39;);
+});
+
+app.put(&#39;/user?&#39;, createUser, function(req, res){
+    res.redirect(&#39;/welcome&#39;);
+});</code></pre>
+<p>Each routing function takes at least 2 arguments. The first is either a string or a regular expression. Express will make sense of a string passed to the function and make a regular expression out of it, we&#39;ll take a look at this later. The second and remaining n arguments are middleware functions. It is important to know that the order in which you create routes is the order in which express will begin to try and match the incoming http request url against the routes you have specified.</p>
+<h3 id="route-matching">Route matching</h3>
+<p>Understanding that each route definition is really calling a function and storing the route and middlware inside the express application, express routes traffic based off the pattern urls you supply. When an http request comes into your application, express loops over the routes you have specified <em>in order</em> and stops the loop after it finds the first matching route. This means if you define two routes with the same pattern twice, only the first definition will ever be called, even if the middleware are different. Imagine express holding an internal list of all the routes you have provided. Let&#39;s look at how express translates strings into middleware.</p>
+<p>With route parameters you can specify variable parts of a uri. These parameters can be unique ids, user names, emails, etc. Parameters are identified by uri segments (<code>/</code> character). You can have any number of uri parameters in your routes. You can then access these parameters in your middleware at <code>request.params</code>. There is also <code>request.query</code> for accessing querystring parameters however, these parameters do not influence routing requests. uri parameters are denoted by a colon and end at the next <code>/</code> character, a <code>?</code> or the end of the specified uri. Express will automatically decode url encoded entities in request uris. For instance <code>%20</code> will be replaced with the <code> </code> character. Let&#39;s take a look at how to work with uri parameters.</p>
+<pre><code>// this route will require the `email` parameter
+app.get(&#39;/account/:email&#39;, printEmail);
+
+// middleware responds with the specified email
+function printEmail (req, res) {
+    var email = req.params.email;
+    res.end(email);
+};
+
+// handle two parameters
+app.post(&#39;/account/:id/:name&#39;, updateAccount);
+
+// middleware to update account
+function updateAccount (req, res) {
+    var id = req.params.id,
+        name = req.params.name;
+
+    db.updateAccount(id, name, req.body, function(err, data){
+        // do some error handling
+        res.json(200, data);
+    });
+};
+
+// get a user or all users
+// the question mark makes the parameter optional
+app.get(&#39;/users/:id?&#39;, getUsers);
+
+// middleware to get user or users
+function getUsers (req, res, next) {
+    var user = req.params.id || &#39;*&#39;;
+
+    db.getUsers(user, function(err, data){
+        // do some logic
+        res.json(200, data);
+    });
+};</code></pre>
+<h2 id="request-object">Request object</h2>
+<p>Express adds some helpful functions and parameters to the request object.</p>
+<h3 id="-req-params-"><code>req.params</code></h3>
+<p><code>req.params</code> contains the parameters you&#39;ve specified in the routes. Note that <code>req.params</code> is actually an array.</p>
+<pre><code>app.get(&#39;/user/:name&#39;, handler);
+
+// GET /user/tj
+req.params.name;
+// =&gt; &quot;tj&quot;</code></pre>
+<h3 id="-req-query-"><code>req.query</code></h3>
+<p>This is an object, containing the parsed querystring. </p>
+<pre><code>// GET /users?name=tj
+req.query.name;
+// =&gt; tj</code></pre>
+<h3 id="-req-param-"><code>req.param()</code></h3>
+<p>Calling <code>req.param()</code> with a key name is a useful tool, but may not be recommended. <code>req.param()</code> will take the single string argument and look for that key on <code>req.params</code>, <code>req.body</code> and <code>req.query</code> in that order. Since you do not know what object the value was returned from it is harder to debug issues with <code>req.param()</code> and you incurr the added debt of having the application look for the value on those three objects. </p>
+<pre><code>var name = req.param(&#39;name&#39;);
+console.log(name);
+// =&gt; &quot;TJ Krusinski&quot;
+
+req.params.name || req.body.name || req.query.name;</code></pre>
+<h3 id="-req-body-"><code>req.body</code></h3>
+<p><code>req.body</code> contains the parsed request body. You do not need to listen for <code>data</code> events with express like you would with the bare http server. This is if you are using the <code>express.bodyParser()</code> middleware. <code>req.body</code> defaults to an empty object <code>{}</code> if no body is received. If the body non <code>utf-8</code> data, you cannot access properties on it.</p>
+<pre><code>var data = req.body;
+console.log(typeof data);
+// =&gt; &quot;object&quot;</code></pre>
+<h3 id="-req-files-"><code>req.files</code></h3>
+<p>When handling multipart uploads from the browser, you can access each file by file file name. If you uploaded a file called <code>edge.png</code> it would be on the <code>files</code> object at <code>files[&#39;edge.png&#39;]</code>. Express writes files to a <code>tmp</code> directory in the home directory of the system user that owns the node process. Regardless of the user, the file object returned by express contains the <code>path</code> property that instructs you to the locatin of the file. </p>
+<pre><code>{
+    size: 74643,
+    path: &#39;/tmp/8ef9c52abe857867fd0a4e9a819d1876&#39;,
+    name: &#39;edge.png&#39;,
+    type: &#39;image/png&#39;,
+    hash: false,
+    lastModifiedDate: Thu Aug 09 2012 20:07:51 GMT-0700 (PDT),
+    _writeStream: {
+        path: &#39;/tmp/8ef9c52abe857867fd0a4e9a819d1876&#39;,
+        fd: 13,
+        writable: false,
+        flags: &#39;w&#39;,
+        encoding: &#39;binary&#39;,
+        mode: 438,
+        bytesWritten: 74643,
+        busy: false,
+        _queue: [],
+        _open: [Function],
+        drainable: true
+    },
+    length: [Getter],
+    filename: [Getter],
+    mime: [Getter]
+}</code></pre>
+<p>The internal <code>bodyParser()</code> middleware uses the <a href="">node-formidable</a> module to handle incoming requests. You can specifiy options to the module in your app definition. </p>
+<pre><code>app.use(express.bodyParser({
+    keepExtensions: true,
+    uploadDir: &#39;/my/files&#39;
+}));</code></pre>
+<p>This instructs node-formidable to keep the file extensions and place the files in <code>/my/files</code>.</p>
+<h3 id="-req-cookies-"><code>req.cookies</code></h3>
+<p>If you are using the <code>express.cookieParser()</code> middleware, cookies are available at <code>req.cookies.cookieName</code>.</p>
+<pre><code>req.cookies[&#39;cookieName&#39;];
+// =&gt; &quot;cookieValue&quot;</code></pre>
+<h3 id="-req-get-"><code>req.get()</code></h3>
+<p><code>req.get()</code> gets HTTP headers from the incoming request by key name.</p>
+<pre><code>req.get(&#39;content-type&#39;);
+// =&gt; &quot;text/plain&quot;
+
+req.get(&#39;content-length&#39;);
+// =&gt; 78352</code></pre>
+<h3 id="-req-is-"><code>req.is()</code></h3>
+<p>Check the request &#39;content-type&#39;.</p>
+<pre><code>// With Content-Type: text/html; charset=utf-8
+req.is(&#39;html&#39;);
+req.is(&#39;text/html&#39;);
+req.is(&#39;text/*&#39;);
+// =&gt; true</code></pre>
+<h3 id="-req-ips-"><code>req.ips</code></h3>
+<p><code>req.ips</code> is an array of the chain of ip addresses from proxies and the remote client. <code>x-forwarded-for</code> is typically a list of ip address created by proxies inline of your application and the client. Load balancers and other http proxies will append to this list as they handle requests from downstream. The ip addresses in the array are in order from client to most recent proxy. This functionality is only enabled when you have <code>&quot;trust proxy&quot;</code> enabled on your application.</p>
+<h3 id="-req-host-"><code>req.host</code></h3>
+<p>The hostname from the request. Useful for security! Note the port number is removed from the http header.</p>
+<pre><code>// Host: &quot;example.com:3000&quot;
+req.host
+// =&gt; &quot;example.com&quot;</code></pre>
+<h3 id="-req-subdomains-"><code>req.subdomains</code></h3>
+<p>An array of the subdomains from the host in order.</p>
+<pre><code>// Host: &quot;tobi.ferrets.example.com&quot;
+req.subdomains
+// =&gt; [&quot;ferrets&quot;, &quot;tobi&quot;]</code></pre>
+<h3 id="-req-xhr-"><code>req.xhr</code></h3>
+<p>A boolean value if the http request came from <code>XMLHttpRequest</code> in the browser.</p>
+<pre><code>req.xhr;
+// =&gt; Boolean</code></pre>
+<h3 id="-req-acceptedlanguages-"><code>req.acceptedLanguages</code></h3>
+<p>An array of the acceptable languages.</p>
+<pre><code>Accept-Language: en;q=.5, en-us
+// =&gt; [&#39;en-us&#39;, &#39;en&#39;]</code></pre>
+<h3 id="-req-acceptslanguage-lang-"><code>req.acceptsLanguage(lang)</code></h3>
+<p>Check if the given lang are acceptable.</p>
+<pre><code>Accept-Language: en;q=.5, en-us
+req.acceptsLanguage(&#39;en&#39;);
+// =&gt; true</code></pre>
+<h2 id="response-object">Response Object</h2>
+<p>Like the request object the response object has many properties and methods that make working with outgoing http responses a bit easier. You can access the standard http methods and properties just as you would if you were not working with express. </p>
+<h3 id="-res-status-"><code>res.status()</code></h3>
+<p>Set the http response code and return the http response object.</p>
+<pre><code>res.status(200).end(&#39;hello world&#39;);</code></pre>
+<h3 id="-res-set-field-value-"><code>res.set(field, value)</code></h3>
+<p>Set a response header. The field value is case-insensitive.</p>
+<pre><code>res.set(&#39;content-type&#39;, &#39;text/html&#39;);</code></pre>
+<h3 id="-res-cookie-name-value-options-"><code>res.cookie(name, value [, options])</code></h3>
+<p>Set cookie <code>name</code> to <code>value</code> and then specify some cookie parameters.</p>
+<pre><code>res.cookie(&#39;foo&#39;, &#39;bar&#39;, {
+    path: &#39;/&#39;,
+    domain: &#39;.foo.com&#39;,
+    secure: true,
+});</code></pre>
+<p>Internally express will set the options to the correct cookie appropriate <code>;</code> sepereated segments.  </p>
+<h3 id="-res-clearcookie-name-"><code>res.clearCookie(name)</code></h3>
+<p>You can clear a cookie from a client with the <code>clearCookie</code> method. Internally express is setting an expires date in the past, which tells clients the cookie should no longer be used.</p>
+<pre><code>res.clearCookie(&#39;foo&#39;);</code></pre>
+<h3 id="-res-redirect-status-url-"><code>res.redirect([status], url)</code></h3>
+<p>Send a redirect header to the client, optionally with an http status. The default is <code>302 Found</code>.</p>
+<pre><code>res.redirect(304, &#39;http://www.foo.com/bar&#39;);
+res.redirect(&#39;http://www.foo.com/bar&#39;);
+res.redirect(&#39;/foo/bar&#39;);</code></pre>
+<p>If you do not specifiy a different domain, express will redirect to the current domain.</p>
+<h3 id="-res-send-"><code>res.send()</code></h3>
+<p><code>res.send</code> is a convience method for ending a response. You can specify a status code as the first argument or not. You can also pass in any type of object and <code>send()</code> will try an understand it and set the appropriate <code>content-type</code> and <code>content-length</code> headers.</p>
+<pre><code>res.send(200, &#39;T</code></pre>
+<h3 id="-res-json-"><code>res.json()</code></h3>
+<p>A handy method to send <code>JSON</code> encoded data to the client is with the <code>json()</code> method. Like <code>send()</code> you can specify an HTTP status code as the first optional argument, and a JavaScript object as the latter argument. Internally express will set the <code>content-type</code> and <code>content-length</code> headers for you.</p>
+<pre><code>res.json(200, {
+    foo: &#39;bar&#39;
+})</code></pre>
+<h3 id="-res-jsonp-"><code>res.jsonp()</code></h3>
+<p>You can send a <code>jsonp</code> response to the client with the <code>jsonp()</code> method. <code>jsonp()</code> works just like <code>json()</code> except it wraps the <code>JSON</code> data in a callback. The default method name for the <code>jsonp</code> data is determined by the <code>callback</code> parameter on the request query string. If it is not set, express will look for <code>jsonp callback name</code> in your express settings. This tells express what to look for in the query string of the request to use as the callback function name.</p>
+<pre><code>// ?callback=foo
+res.jsonp({ user: &#39;tobi&#39; })
+// =&gt; foo({ &quot;user&quot;: &quot;tobi&quot; })
+
+app.set(&#39;jsonp callback name&#39;, &#39;cb&#39;);
+
+// ?cb=foo
+res.jsonp(500, { error: &#39;message&#39; })
+// =&gt; foo({ &quot;error&quot;: &quot;message&quot; })</code></pre>
+<h3 id="-res-type-"><code>res.type()</code></h3>
+<p>If you care to set your own <code>content-type</code> header, you can use <code>type()</code> to look up a mime type of a file extension or match a type specified.</p>
+<pre><code>res.type(&#39;.html&#39;);
+res.type(&#39;html&#39;);
+res.type(&#39;json&#39;);
+res.type(&#39;application/json&#39;);
+res.type(&#39;png&#39;);</code></pre>
+<h3 id="-res-attachment-filename-"><code>res.attachment([filename])</code></h3>
+<p>If you want to send a response to a browser instructing it to save a file, you can use the <code>attachment()</code> method. This is handy since no one ever remembers the correct header names to do it.</p>
+<pre><code>res.attachment();
+// Content-Disposition: attachment
+
+res.attachment(&#39;path/to/logo.png&#39;);
+// Content-Disposition: attachment; filename=&quot;logo.png&quot;
+// Content-Type: image/png</code></pre>
+<h3 id="-res-sendfile-path-options-fn-"><code>res.sendfile(path, [options], [fn]])</code></h3>
+<p><code>sendfile()</code> is often very useful when you need to call out a specific route to serve a file. While you can instruct express to server whole directories as static content in your application settings, there are instances when you would want to send a single file. It&#39;s important to understand that the <code>maxAge</code> header defaults to <code>0</code> when using this method. So if you want items to cache in browsers, be sure to pass the optional <code>options</code> object and set the <code>maxAge</code> key. You can pass a callback function as the last argument in this method to get information about the success of the function. The callback is called when the operation is complete or when there was an error and it was unable to complete. The first argument is a <code>Boolean</code> error.</p>
+<pre><code>res.sendfile(&#39;/path/to/file.html&#39;, {
+    maxAge: 60 * 60 * 24 * 14
+});
+
+res.sendfile(&#39;/path/to/file.html&#39;, {
+    maxAge: 60 * 60 * 24 * 14
+}, function(err){
+    if (err) throw err;
+});</code></pre>
+<h3 id="-res-locals-"><code>res.locals</code></h3>
+<p>The <code>locals</code> object is typically used to store state during the life of a <code>request</code> <code>response</code> cycle. Attach data to <code>locals</code> and it will later show up in your view scope. This is joined with the <code>app.locals</code> object (which you alter with <code>app.set()</code> method) to give context to the views when you render them.</p>
+<h3 id="-res-render-view-locals-callback-"><code>res.render(view, [locals, ][callback])</code></h3>
+<p><code>render()</code> does many things. Primarily it renders the view specified with the view engine you have specified in your application settings. It also, when passed a callback, return a <code>Boolean</code> error and the full html that was rendered from the view. If not passed a callback it will render <code>app.locals</code>, <code>res.locals</code> and the <code>locals</code> object optionally passed into the view, then set the appropriate headers and end the request. Keep in mind that the <code>view</code> parameter is the filename of the view, not the view string itself.</p>
+<pre><code>res.render(&#39;file&#39;, locals);
+
+res.render(&#39;file&#39;, locals, function(err, html){
+    // handle error and work with html
+});</code></pre>
+<h2 id="cli">CLI</h2>
+<p>Express has a useful cli to stub out your application. The command is <code>express</code> and it takes a few arguments. You can use the <code>-h</code> flag to see options when creating an express application.</p>
+<pre><code>$ express -h
+
+  Usage: express [options] [dir]
+
+  Options:
+
+    -h, --help          output usage information
+    -V, --version       output the version number
+    -s, --sessions      add session support
+    -e, --ejs           add ejs engine support (defaults to jade)
+    -J, --jshtml        add jshtml engine support (defaults to jade)
+    -H, --hogan         add hogan.js engine support
+    -c, --css &lt;engine&gt;  add stylesheet &lt;engine&gt; support (less|stylus) (defaults to plain css)
+    -f, --force         force on non-empty directory</code></pre>
+<p>The basic use of <code>express</code> is <code>$ express project</code> where <code>project</code> indicates the name of the directory that express will create and place the project inside of. The <code>express</code> command is very useful to stub out a project and get moving with it immediately. The options shown above can add functionality to your application. The options are pretty basic but are useful nonetheless.</p>
+
+  </body>
+</html>
